@@ -14,12 +14,7 @@ UINT processhook::GetProcessId(const char * wndname)
 	return pid;
 }
 
-HANDLE processhook::ConnectToProcess(DWORD pid)
-{
-	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-}
-
-DWORD processhook::GetModuleBaseAddress(const HANDLE& hProc, const char * modulename)
+DWORD processhook::GetModuleBaseAddress(const HANDLE& hProc, const wchar_t * modulename)
 {
 	/*Get List of loaded modules in hProc*/
 
@@ -32,7 +27,7 @@ DWORD processhook::GetModuleBaseAddress(const HANDLE& hProc, const char * module
 
 	/*Iterate through modules and get base address*/
 
-	char sbuf[128];
+	wchar_t sbuf[128];
 	MODULEINFO moduleInfo;
 	moduleInfo.lpBaseOfDll = 0;
 
@@ -40,9 +35,12 @@ DWORD processhook::GetModuleBaseAddress(const HANDLE& hProc, const char * module
 
 		GetModuleBaseName(hProc, modules[i], sbuf, 128);
 
-		if (strcmp(sbuf, modulename) == 0)
+		if (wcscmp(sbuf, modulename) == 0) {
 			GetModuleInformation(hProc, modules[i], &moduleInfo, sizeof(MODULEINFO));
+			return (DWORD)moduleInfo.lpBaseOfDll;
+		}
+			
 	}
 
-	return (DWORD)moduleInfo.lpBaseOfDll;
+	return 0;
 }

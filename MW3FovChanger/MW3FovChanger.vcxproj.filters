@@ -14,24 +14,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="processhook.cpp">
+    <ClCompile Include="src\processhook.cpp">
       <Filter>process/mem</Filter>
     </ClCompile>
-    <ClCompile Include="FovChanger.cpp">
+    <ClCompile Include="src\fovchanger.cpp">
       <Filter>fovchanger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="processhook.h">
+    <ClInclude Include="src\processhook.h">
       <Filter>process/mem</Filter>
     </ClInclude>
-    <ClInclude Include="MemAccess.h">
-      <Filter>process/mem</Filter>
-    </ClInclude>
-    <ClInclude Include="FovChanger.h">
+    <ClInclude Include="src\fovchanger.h">
       <Filter>fovchanger</Filter>
     </ClInclude>
   </ItemGroup>

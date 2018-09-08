@@ -3,13 +3,13 @@
 #include "processhook.h"
 #include "FovChanger.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv, char** envp) {
+
+	std::cout << "MW3 Fov Changer (Developed with love by Mesinger)" << std::endl;
 
 	/*Connect to process*/
 	DWORD pid = 0;
 	HANDLE hProc = NULL;
-
-	FovChanger fovchanger;
 
 	/*Connect to either, MP or SP*/
 	while (!pid) {
@@ -18,10 +18,13 @@ int main(int argc, char** argv) {
 		pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3");
 		if (pid) {
 
-			hProc = processhook::ConnectToProcess(pid);
+			hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
 
-			if(hProc)
-				fovchanger.ChangeFOV_SP(hProc, 90.f);
+			if (hProc) {
+
+				MessageBeep(MB_OKCANCEL);
+				fovchanger::ChangeFOV_SP(hProc, 90.f);
+			}
 
 			break;
 		}
@@ -30,10 +33,13 @@ int main(int argc, char** argv) {
 		pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3 Multiplayer");
 		if (pid) {
 
-			hProc = processhook::ConnectToProcess(pid);
+			hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
 
-			if(hProc)
-				fovchanger.ChangeFOV_MP(hProc, 90.f);
+			if (hProc) {
+
+				MessageBeep(MB_OKCANCEL);
+				fovchanger::ChangeFOV_MP(hProc, 90.f);
+			}
 
 			break;
 		}
