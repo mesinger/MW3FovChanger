@@ -4,11 +4,39 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <string>
-#include <sstream>
 
 fov::Changer::Changer(float fov)
 	:fov(fov)
 {
+	CHAR szPath[MAX_PATH];
+
+	if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath))) {
+
+		strcat_s(szPath, "\\mw3fovchanger\\config.cfg");
+
+		OFSTRUCT reopenbuff;
+		HFILE hfile = OpenFile(szPath, &reopenbuff, OF_READ);
+
+		if (hfile != HFILE_ERROR) {
+
+			char buf[64];
+			DWORD bytesread;
+			if (ReadFile((HANDLE)hfile, buf, 64, &bytesread, NULL)) {
+
+				buf[bytesread] = '\0';
+				float configFov = std::strtof(buf, nullptr);
+
+				this->fov = configFov;
+			}
+
+			CloseHandle((HANDLE)hfile);
+		}
+	}
+}
+
+fov::Changer::~Changer()
+{
+	fov::updateConfig(fov);
 }
 
 void fov::Changer::setfov_sp(const HANDLE hProc) const
@@ -43,23 +71,21 @@ void fov::Changer::setfov_mp(const HANDLE hProc) const
 	while (WriteProcessMemory(hProc, (LPVOID)fovmemaddress, &fov, sizeof(float), NULL)) Sleep(100);
 }
 
-fov::SettingsManager::SettingsManager(Changer * const pchanger)
-{
-}
-
-void fov::SettingsManager::safeDefaultFov(float newfov)
+void fov::updateConfig(float fov)
 {
 	TCHAR szPath[MAX_PATH];
 
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, szPath))) {
 
-		wcscat_s(szPath, L"\\mw3fovchanger\\config.cfg");
+		wcscat_s(szPath, L"\\mw3fovchanger");
+		CreateDirectory(szPath, NULL);
+
+		wcscat_s(szPath, L"\\config.cfg");
 		HANDLE hFile = CreateFile(szPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-		std::stringstream ss;
-		ss << newfov;
+		if (hFile == INVALID_HANDLE_VALUE) return;
 
-		std::string s = ss.str();
+		std::string s = std::to_string(fov);
 
 		WriteFile(hFile, s.c_str(), s.length(), NULL, NULL);
 

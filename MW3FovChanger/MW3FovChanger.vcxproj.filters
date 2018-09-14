@@ -14,14 +14,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>main</Filter>
-    </ClCompile>
     <ClCompile Include="src\processhook.cpp">
       <Filter>process/mem</Filter>
     </ClCompile>
     <ClCompile Include="src\fovchanger.cpp">
       <Filter>fovchanger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>main</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

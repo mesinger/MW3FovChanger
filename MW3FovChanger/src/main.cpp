@@ -2,111 +2,87 @@
 #include <iostream>
 #include "processhook.h"
 #include "FovChanger.h"
-#include <thread>
+#include <future>
+#include <memory>
 
 #define VK_KEY_1 0x31
 
-/*this method blocks execution*/
-void userInputForFovChanger(fov::Changer* const pchanger);
-
 int main(int argc, char** argv) {
 
-	fov::Changer fovchanger;
-
-	std::thread uithread(userInputForFovChanger, &fovchanger);
-
-	/*Connect to process*/
-	DWORD pid = 0;
-	HANDLE hProc = NULL;
-
-	/*Connect to either, MP or SP*/
-	while (!pid) {
-
-		//Singleplayer
-		pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3");
-		if (pid) {
-
-			hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
-
-			if (hProc) {
-
-				std::cout << "Attached to MW3" << std::endl;
-
-				MessageBeep(MB_OKCANCEL);
-				fovchanger.setfov_sp(hProc);
-			}
-
-			break;
-		}
-
-		//Multiplayer
-		pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3 Multiplayer");
-		if (pid) {
-
-			hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
-
-			if (hProc) {
-
-				std::cout << "Attached to MW3" << std::endl;
-
-				MessageBeep(MB_OKCANCEL);
-				fovchanger.setfov_mp(hProc);
-			}
-
-			break;
-		}
-
-		Sleep(100);
-	}
-
-	CloseHandle(hProc);
-	uithread.join();
-
-	MessageBeep(MB_OKCANCEL);
-
-	return EXIT_SUCCESS;
-}
-
-void userInputForFovChanger(fov::Changer* const pchanger)
-{
 	std::cout << "MW3 Fov Changer (Developed with love by Mesinger)" << std::endl;
-	std::cout << "[1] Set default FOV" << std::endl;
-	std::cout << "[+] Increase FOV by 5" << std::endl;
-	std::cout << "[-] Decrease FOV by 5" << std::endl << std::endl;
+	std::cout << "[+[NUMPAD]] Increase FOV by 5" << std::endl;
+	std::cout << "[-[NUMPAD]] Decrease FOV by 5" << std::endl << std::endl;
 
 	std::cout << "Please start MW3..." << std::endl;
 
-	fov::SettingsManager fovmgr(pchanger);
-
 	while (true) {
 
-		if (GetAsyncKeyState(VK_KEY_1)) {
+		fov::Changer fovchanger;
 
-			std::cout << "Enter new fov[0 - 180]: ";
+		/*Connect to process*/
+		DWORD pid = 0;
+		HANDLE hProc = NULL;
 
-			float fov;
-			std::cin >> fov;
+		std::unique_ptr<std::future<void>> worker;
 
-			if (!std::cin.fail()) {
-				std::cout << std::endl << "Invalid input" << std::endl;
-				continue;
+		/*Connect to either, MP or SP*/
+		while (!pid) {
+
+			//Singleplayer
+			pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3");
+			if (pid) {
+
+				hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
+
+				if (hProc) {
+
+					std::cout << "Attached to MW3" << std::endl;
+
+					MessageBeep(MB_OKCANCEL);
+					worker = std::make_unique<std::future<void>>(std::async(&fov::Changer::setfov_sp, &fovchanger, hProc));
+					break;
+				}
 			}
-			
-			if (pchanger->changeFov(fov)) {
-				fovmgr.safeDefaultFov(fov);
+
+			//Multiplayer
+			pid = processhook::GetProcessId("Call of Duty®: Modern Warfare® 3 Multiplayer");
+			if (pid) {
+
+				hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, pid);
+
+				if (hProc) {
+
+					std::cout << "Attached to MW3" << std::endl;
+
+					MessageBeep(MB_OKCANCEL);
+					worker = std::make_unique<std::future<void>>(std::async(&fov::Changer::setfov_mp, &fovchanger, hProc));
+					break;
+				}
+			}
+
+			Sleep(100);
+		}
+
+		while (worker->wait_for(std::chrono::milliseconds(25)) != std::future_status::ready) {
+
+			if (GetAsyncKeyState(VK_ADD)) {
+
+				float oldfov = fovchanger.getFov();
+				fovchanger.changeFov(oldfov + 5.f);
+				Sleep(125);
+			}
+			else if (GetAsyncKeyState(VK_SUBTRACT)) {
+
+				float oldfov = fovchanger.getFov();
+				fovchanger.changeFov(oldfov - 5.f);
+				Sleep(125);
 			}
 		}
-		else if (GetAsyncKeyState(VK_ADD)) {
 
-			float oldfov = pchanger->getFov();
-			pchanger->changeFov(oldfov + 5.f);
-		}
-		else if (GetAsyncKeyState(VK_SUBTRACT)) {
+		CloseHandle(hProc);
 
-			float oldfov = pchanger->getFov();
-			pchanger->changeFov(oldfov - 5.f);
-		}
-
-		Sleep(100);
+		std::cout << "Detached from MW3" << std::endl;
 	}
+
+	return EXIT_SUCCESS;
 }

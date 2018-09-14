@@ -6,11 +6,9 @@ namespace fov {
 
 	class Changer {
 
-		friend class SettingsManager;
-
 	public:
 		Changer(float fov = 90.f);
-		virtual ~Changer() = default;
+		virtual ~Changer();
 
 		/*fov changing functions for singleplayer, this method blocks execution*/
 		void setfov_sp(const HANDLE hProc) const;
@@ -32,15 +30,6 @@ namespace fov {
 		float fov;
 	};
 
-	class SettingsManager {
-
-	public:
-
-		SettingsManager(Changer* const pchanger);
-		virtual ~SettingsManager() = default;
-
-		void safeDefaultFov(float newfov);
-	};
-
+	void updateConfig(float fov);
 }
 
