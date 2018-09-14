@@ -33,7 +33,7 @@ DWORD processhook::GetModuleBaseAddress(const HANDLE& hProc, const wchar_t * mod
 
 	for (int i = 0; i < cmodules; i++) {
 
-		GetModuleBaseName(hProc, modules[i], sbuf, 128);
+		GetModuleBaseName(hProc, modules[i], sbuf, sizeof(sbuf));
 
 		if (wcscmp(sbuf, modulename) == 0) {
 			GetModuleInformation(hProc, modules[i], &moduleInfo, sizeof(MODULEINFO));
